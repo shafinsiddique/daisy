@@ -1,0 +1,4 @@
+(executable
+ (public_name daisy)
+ (name main)
+ (libraries daisy))
