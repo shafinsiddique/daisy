@@ -1,1 +1,1 @@
-lib/combinator.ml:
+lib/combinator.ml: List String

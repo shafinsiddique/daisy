@@ -34,3 +34,25 @@ let optional parser = Parser
    | ParsingError _ -> ParsingSuccess (None, input))
 
 
+(* 
+Takes in a series of parsers, only returns parsing success if ALL of them return succesfully. 
+Returns a list of all the values on parsing success
+*)
+
+let sequence parsers = 
+  let rec _sequence parsers output = 
+    Parser (fun input -> match parsers with 
+    [] -> ParsingSuccess (List.rev output, input)
+    | (x::xs) -> match (run_parser x input) with 
+              ParsingSuccess (value, rest) -> run_parser (_sequence xs (List.cons value output)) rest
+              | ParsingError e -> ParsingError e) 
+    in _sequence parsers []
+
+
+let word_parser word = Parser 
+  (fun input -> let parsers = String.fold_left (fun lst char -> (List.cons char lst)) [] word |> List.rev |> List.map (fun chr -> char_parser chr)  in 
+    let result = run_parser (sequence parsers) input in 
+      match result with 
+        ParsingSuccess (value, rest) -> ParsingSuccess (List.fold_left (fun str chr -> str ^ (String.make 1 chr)) "" value, rest)
+        | ParsingError e -> ParsingError e)
+
