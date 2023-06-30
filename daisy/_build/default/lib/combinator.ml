@@ -80,6 +80,20 @@ let digit_parser = any_of (List.map
   | _ -> 'h' in char_parser chr) (create_list 0 10 []))
 
 
+(* 
+Keep parsing for as long as the conidtion is ture.    
+*)
+let conditional_parser f = 
+  let rec _conditional_parser input index output = 
+    if index >= String.length input then (List.rev output, index) else 
+    let current_char = input.[index] in 
+      if (f current_char) then 
+        _conditional_parser input (index+1) (List.cons current_char output)
+      else (List.rev output, index) in 
+  Parser (fun input -> 
+    let (output, index) = _conditional_parser input 0 [] in 
+      ParsingSuccess (output, String.sub input index ((String.length input)-index)))
+
 (*
   
 I want a parser that takes in anything and wraps it in a parser. 
@@ -97,6 +111,9 @@ let fmap f parser =
 
 let pure value = Parser (fun input -> ParsingSuccess (value, input))
 
+(* 
+Applicative style parsing.    
+*)
 let (<*>) p1 p2 = Parser (fun input -> match run_parser p1 input with 
                             ParsingSuccess (func, rest) -> run_parser (fmap func p2) rest
                             | ParsingError e -> ParsingError e )
