@@ -117,3 +117,36 @@ Applicative style parsing.
 let (<*>) p1 p2 = Parser (fun input -> match run_parser p1 input with 
                             ParsingSuccess (func, rest) -> run_parser (fmap func p2) rest
                             | ParsingError e -> ParsingError e )
+
+let zero_or_more parser = 
+  let rec _zero_or_more input output = match (run_parser parser input) with 
+    ParsingSuccess (value, rest) -> _zero_or_more rest (List.cons value output)
+    | ParsingError _ -> ParsingSuccess (List.rev output, input)
+  in Parser (fun input -> _zero_or_more input [])
+
+let one_or_more parser =
+  Parser (fun input -> match run_parser (zero_or_more parser) input with 
+    ParsingSuccess (value, rest) -> (match value with 
+      [] -> ParsingError "Expected one matched item, found none."
+      | lst -> ParsingSuccess (lst, rest))
+    | ParsingError e -> ParsingError e)
+
+let parse_on_condition condition parser = 
+  let rec _parse_on_condition input output = 
+    match run_parser condition input with 
+      ParsingSuccess (_, _) -> ParsingSuccess ((List.rev output), input)
+      | ParsingError _ -> 
+        (match run_parser parser input with 
+          ParsingSuccess (value, rest) -> _parse_on_condition rest (List.cons value output)
+          | ParsingError _ -> ParsingSuccess ((List.rev output), input)) 
+  in Parser (fun input -> _parse_on_condition input [])
+
+let single_conditional_parser condition =
+  Parser (fun input -> if (String.length input == 0) 
+                          then ParsingError "No chars found" 
+                          else 
+                            let current_char = input.[0] in 
+                              if condition current_char then 
+                                ParsingSuccess (current_char, String.sub input 1 ((String.length input)-1))
+                                else (ParsingError "condition failed"))
+                                
