@@ -1,6 +1,7 @@
 open Combinator
 
-type markdown = Heading of {level: int; text: string} | MarkdownChar of char | Bold of (markdown list)
+type markdown = Heading of {level: int; text: string} | MarkdownChar of char 
+  | Bold of (markdown list) | Italic of (markdown list)
 
 (* 
    
@@ -33,7 +34,8 @@ Internal Parser : bold, link, italacized,
     let bold_parser = parser (word_parser "##") (fun _ _ _ -> ()) in  *)
 let rec internal_parser () = 
   let bold_parser = get_parser (word_parser "**") (fun _ tokens _ -> Bold tokens)  in 
-    any_of [bold_parser; markdown_char_parser]
+  let italic_parser = get_parser (word_parser "*") (fun _ tokens _ -> Italic tokens)  in 
+    any_of [bold_parser; italic_parser; markdown_char_parser]
 and 
 get_parser p handler = pure handler <*> p <*> (parse_on_condition_lazy p internal_parser) <*> p 
 
