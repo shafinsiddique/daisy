@@ -14,6 +14,7 @@ let markdown_char_parser =
     ParsingSuccess (value, rest) -> ParsingSuccess (MarkdownChar value, rest)
     | ParsingError e -> ParsingError e)
 
+  
 (* let bold_parser = 
   let handler _ chars _ = 
       (List.fold_left (fun str chr -> str ^ (String.make 1 chr)) "" chars) in pure handler <*> 
@@ -31,10 +32,10 @@ Internal Parser : bold, link, italacized,
   and 
     let bold_parser = parser (word_parser "##") (fun _ _ _ -> ()) in  *)
 let rec internal_parser () = 
-  let bold_parser = get_parser (word_parser "##") (fun _ tokens _ -> Bold tokens)  in 
-    any_of [bold_parser]
+  let bold_parser = get_parser (word_parser "**") (fun _ tokens _ -> Bold tokens)  in 
+    any_of [bold_parser; markdown_char_parser]
 and 
-get_parser p handler = pure handler <*> p <*> (parse_on_condition p (internal_parser ())) <*> p 
+get_parser p handler = pure handler <*> p <*> (parse_on_condition_lazy p internal_parser) <*> p 
 
 let heading_parser =  
   let handler tags text = Heading {level=(String.length tags); text=(List.fold_left (fun str chr -> str ^ (String.make 1 chr)) "" text)} in 

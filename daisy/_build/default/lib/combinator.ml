@@ -141,6 +141,30 @@ let parse_on_condition condition parser =
           | ParsingError _ -> ParsingSuccess ((List.rev output), input)) 
   in Parser (fun input -> _parse_on_condition input [])
 
+(* 
+
+The follwoing 2 are parsers work in this way :
+
+- If the condition parser succeeds, end immediately as a success. 
+
+- Otherwise run the parser. 
+
+Lazy and Non lazy versions available
+
+
+
+
+*)
+let parse_on_condition_lazy condition parser = 
+    let rec _parse_on_condition input output = 
+      match run_parser condition input with 
+        ParsingSuccess (_, _) -> ParsingSuccess ((List.rev output), input)
+        | ParsingError _ -> 
+          (match run_parser (parser ()) input with 
+            ParsingSuccess (value, rest) -> _parse_on_condition rest (List.cons value output)
+            | ParsingError _ -> ParsingSuccess ((List.rev output), input)) 
+    in Parser (fun input -> _parse_on_condition input [])
+
 let single_conditional_parser condition =
   Parser (fun input -> if (String.length input == 0) 
                           then ParsingError "No chars found" 
@@ -149,4 +173,4 @@ let single_conditional_parser condition =
                               if condition current_char then 
                                 ParsingSuccess (current_char, String.sub input 1 ((String.length input)-1))
                                 else (ParsingError "condition failed"))
-                                
+
