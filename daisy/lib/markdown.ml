@@ -1,7 +1,7 @@
 open Combinator
 
 type markdown = Heading of {level: int; text: string} | MarkdownChar of char 
-  | Bold of (markdown list) | Italic of (markdown list)
+  | Bold of (markdown list) | Italic of (markdown list) | Link of (markdown list * string)
 
 (* 
    
@@ -32,12 +32,18 @@ Internal Parser : bold, link, italacized,
     pure handler <*> p <*> (parse_on_condition p internal_parser) <*> p  
   and 
     let bold_parser = parser (word_parser "##") (fun _ _ _ -> ()) in  *)
+let chars_to_string chars = List.fold_left (fun str chr -> str ^ (String.make 1 chr)) "" chars
+
 let rec internal_parser () = 
   let bold_parser = get_parser (word_parser "**") (fun _ tokens _ -> Bold tokens)  in 
   let italic_parser = get_parser (word_parser "*") (fun _ tokens _ -> Italic tokens)  in 
-    any_of [bold_parser; italic_parser; markdown_char_parser]
+  let link_parser = pure (fun _ items _ _ url _ -> Link (items, (chars_to_string url))) <*> char_parser '[' <*> (parse_on_condition_lazy (char_parser ']') internal_parser) <*> char_parser ']' 
+            <*> char_parser '(' <*> conditional_parser (fun chr -> chr != ')') <*> char_parser ')' in 
+    any_of [bold_parser; italic_parser; link_parser; markdown_char_parser]
 and 
-get_parser p handler = pure handler <*> p <*> (parse_on_condition_lazy p internal_parser) <*> p 
+get_parser p handler= pure handler <*> p <*> (parse_on_condition_lazy p internal_parser) <*> p 
+and
+get_parser2  p handler= pure handler <*> p <*> (parse_on_condition_lazy p internal_parser) <*> p 
 
 let heading_parser =  
   let handler tags text = Heading {level=(String.length tags); text=(List.fold_left (fun str chr -> str ^ (String.make 1 chr)) "" text)} in 
