@@ -2,13 +2,7 @@ open Combinator
 
 type markdown = Heading of {level: int; components: markdown list} | MarkdownChar of char 
   | Bold of (markdown list) | Italic of (markdown list) | Link of {components: markdown list; url: string}
-(* 
-   
-If any of parsers from parser list returns succesful then STOP. 
-
-As long as those don't get matched, run the parser p. store output in lst, keep working. 
-*)
-
+  | Paragraph of (markdown list)
 
 let markdown_char_parser = 
   Parser (fun input -> match (run_parser (single_conditional_parser (fun chr -> chr != '\n')) input) with 
@@ -32,6 +26,11 @@ let heading_parser =
   one_or_more (internal_parser ())
 
 
+let paragraph_parser = Parser (fun input -> 
+  if (String.length input) == 0 then (ParsingError "Paragraph Not Found") 
+  else (run_parser (pure (fun m _ -> Paragraph m) <*> parse_on_condition_lazy (word_parser "\n\n") internal_parser <*> zero_or_more (char_parser '\n')) input))
+
+let markdown_parser = one_or_more (any_of [heading_parser; paragraph_parser])
 (*
 What's left? List, Paragraph (Outer level), continous parsing.   
 
