@@ -3,5 +3,8 @@
 (** @canonical Daisy.Combinator *)
 module Combinator = Daisy__Combinator
 
+(** @canonical Daisy.Converter *)
+module Converter = Daisy__Converter
+
 (** @canonical Daisy.Markdown *)
 module Markdown = Daisy__Markdown
