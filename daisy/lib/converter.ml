@@ -10,8 +10,3 @@ let file_to_markdown path =
         | ParsingError "End of file" -> List.rev items 
         | _ -> to_markdown items in 
   to_markdown []
-
-let read_file path = 
-  let ic = open_in path in 
-    let line = input_line ic in 
-      print_endline line

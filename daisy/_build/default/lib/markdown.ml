@@ -38,7 +38,7 @@ let rec collapse_chars node =
       | (x::xs) -> 
         match x with 
           MarkdownChar c -> collapse xs (join_or_add c output)
-          | item -> List.cons (collapse_chars item) output in 
+          | item -> collapse xs (List.cons (collapse_chars item) output) in 
     
   match node with 
     Bold c -> Bold (collapse c [])
