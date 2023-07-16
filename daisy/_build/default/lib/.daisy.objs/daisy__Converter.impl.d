@@ -1,1 +1,1 @@
-lib/converter.ml: Combinator List Markdown
+lib/converter.ml: Combinator Markdown

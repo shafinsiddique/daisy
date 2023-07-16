@@ -4,6 +4,8 @@ type markdown = Heading of {level: int; components: markdown list} | MarkdownCha
   | Bold of (markdown list) | Italic of (markdown list) | Link of {components: markdown list; url: string}
   | Paragraph of (markdown list) | MarkdownString of string
 
+let space_and_newline_parser = zero_or_more (any_of [char_parser ' '; char_parser '\n'])
+
 let markdown_char_parser = 
   Parser (fun input -> match (run_parser (single_conditional_parser (fun chr -> chr != '\n')) input) with 
     ParsingSuccess (value, rest) -> ParsingSuccess (MarkdownChar value, rest)
@@ -14,13 +16,11 @@ let chars_to_string chars = List.fold_left (fun str chr -> str ^ (String.make 1 
 let rec internal_parser () = 
   let bold_parser = get_parser (word_parser "**") (fun _ tokens _ -> Bold tokens)  in 
   let italic_parser = get_parser (word_parser "*") (fun _ tokens _ -> Italic tokens)  in 
-  let link_parser = pure (fun _ components _ _ url _ -> Link {components;url=(chars_to_string url)}) <*> char_parser '[' <*> (parse_on_condition_lazy (any_of [char_parser '\n'; char_parser ']']) internal_parser) <*> char_parser ']' 
+  let link_parser = pure (fun _ components _ _ url _ -> Link {components;url=(chars_to_string url)}) <*> char_parser '[' <*> (parse_on_condition_lazy (any_of [word_parser "\n\n"; word_parser "\n "; word_parser "]"]) internal_parser) <*> char_parser ']' 
             <*> char_parser '(' <*> conditional_parser (fun chr -> chr != ')' && chr != '\n') <*> char_parser ')' in 
     any_of [bold_parser; italic_parser; link_parser; markdown_char_parser]
 and 
-get_parser p handler= pure handler <*> p <*> (parse_on_condition_lazy p internal_parser) <*> p 
-
-
+get_parser p handler= pure handler <*> p <*> (parse_on_condition_lazy (any_of [word_parser "\n"; p]) internal_parser) <*> p 
 
 
 let rec collapse_chars node = 
@@ -59,7 +59,8 @@ let paragraph_parser = pure (fun items -> collapse_chars(Paragraph items))
 
 Only time markdown parser would fail is if string is empty. 
 *)
-let markdown_parser =  any_of [heading_parser; paragraph_parser]
+let markdown_parser =  
+  one_or_more (pure (fun _ p  _-> p ) <*> space_and_newline_parser <*> any_of [heading_parser; paragraph_parser] <*> space_and_newline_parser ) 
 (*
 What's left? List, Paragraph (Outer level), continous parsing.   
 
