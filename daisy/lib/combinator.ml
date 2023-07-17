@@ -165,6 +165,7 @@ let parse_on_condition_lazy condition parser =
             | ParsingError _ -> ParsingSuccess ((List.rev output), input)) 
     in Parser (fun input -> _parse_on_condition input [])
 
+let space_and_newline_parser = zero_or_more (any_of [char_parser ' '; char_parser '\n'])
 let single_conditional_parser condition =
   Parser (fun input -> if (String.length input == 0) 
                           then ParsingError "No chars found" 

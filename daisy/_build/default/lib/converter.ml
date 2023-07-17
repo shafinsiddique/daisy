@@ -12,3 +12,28 @@ let file_to_markdown path =
             | ParsingSuccess (value, _) -> Some value)
       | None -> None 
     
+
+
+(*
+   
+We need a templating engine. 
+
+What does a template engine need. 
+
+it need a concept of boolean ; true or false. 
+
+(( true | false ))
+
+(( "shafin"))
+
+(( 12345 ))
+
+(( .Site.))
+
+(( if isset <variable> ))
+
+{{ endif }}
+
+
+
+*)

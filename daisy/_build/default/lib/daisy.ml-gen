@@ -8,3 +8,6 @@ module Converter = Daisy__Converter
 
 (** @canonical Daisy.Markdown *)
 module Markdown = Daisy__Markdown
+
+(** @canonical Daisy.Template *)
+module Template = Daisy__Template
