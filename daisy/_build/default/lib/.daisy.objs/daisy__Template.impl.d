@@ -1,1 +1,1 @@
-lib/template.ml: Combinator
+lib/template.ml: Combinator List String
