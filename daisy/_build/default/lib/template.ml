@@ -1,6 +1,7 @@
 open Combinator
 
-type template = TrueExpr | FalseExpr | StringExpr of string | IntExpr of int
+type template = TrueExpr | FalseExpr | StringExpr of string | IntExpr of int 
+  | LocalVariable of string | SiteVariable of string | PageVariable of string
 let boolean_parser = 
   Parser (fun input -> match run_parser (any_of [word_parser "true"; word_parser "false"]) input with 
     ParsingSuccess (value, rest) -> 
@@ -23,10 +24,27 @@ let strings_parser = Parser (fun input ->
     
 let lazy_parser p = Parser (fun input -> run_parser (p ()) input)
 
+let rec create_list current ending lst = 
+  if current == ending then List.rev lst 
+  else create_list (current+1) ending (List.cons current lst)
+
+let _local_variable_name_parser = 
+  let letters = (List.map char_parser (List.map Char.chr (List.append (create_list 97 123 []) (create_list 65 90 [])))) in 
+  pure (fun first rest -> (List.fold_left (fun str chr -> str ^ (String.make 1 chr)) "" (List.cons first rest))) <*> (any_of letters) <*> zero_or_more (any_of (List.append letters [char_parser '_'])) 
+  
+let local_variable_parser = 
+  Parser (fun input -> match (run_parser _local_variable_name_parser input) with 
+    ParsingSuccess (str, rest) -> ParsingSuccess (LocalVariable str, rest)
+    | ParsingError e -> ParsingError e)
+  
+let site_variable_parser = pure (fun _ name ->  SiteVariable name)  <*> word_parser ".Site." <*> _local_variable_name_parser 
+
+let page_variable_parser = pure (fun _ name -> PageVariable name) <*> word_parser ".Page." <*> _local_variable_name_parser
+
 let rec template_expression_parser () = 
   (* let with_brackets p =  in  *)
-    pure (fun _ n _ -> n) <*> space_and_newline_parser <*> any_of [lazy_parser template_with_brackets; boolean_parser; strings_parser; integer_parser] <*>  space_and_newline_parser
+    pure (fun _ n _ -> n) <*> space_and_newline_parser <*> any_of [lazy_parser template_with_brackets; boolean_parser; strings_parser; integer_parser; site_variable_parser; page_variable_parser; local_variable_parser] <*>  space_and_newline_parser
 and template_with_brackets () = (pure (fun _ e _ -> e) <*> char_parser '(' <*> template_expression_parser () <*> char_parser ')')
 
 let template_parser () = 
-    pure (fun _ n _ -> n ) <*> word_parser "((" <*> template_expression_parser () <*> word_parser "))"
+    pure (fun _ _ n _ -> n ) <*> space_and_newline_parser <*>  word_parser "((" <*> template_expression_parser () <*> word_parser "))"
