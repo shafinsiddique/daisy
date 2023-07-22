@@ -52,11 +52,16 @@ let sequence parsers =
     in _sequence parsers []
 
 
+let empty_string_parser = Parser (fun input -> 
+  if input = "" then ParsingSuccess (' ',"") else ParsingError "Expected empty string")
+
+let end_of_word_parser = any_of [char_parser ' '; char_parser '\n'; empty_string_parser]
+
 (* 
 A word parser. 
 *)
 let word_parser word = Parser 
-  (fun input -> let parsers = String.fold_left (fun lst char -> (List.cons char lst)) [] word |> List.rev |> List.map (fun chr -> char_parser chr)  in 
+  (fun input -> let parsers = List.append (String.fold_left (fun lst char -> (List.cons char lst)) [] word |> List.rev |> List.map (fun chr -> char_parser chr)) [end_of_word_parser] in 
     let result = run_parser (sequence parsers) input in 
       match result with 
         ParsingSuccess (value, rest) -> ParsingSuccess (List.fold_left (fun str chr -> str ^ (String.make 1 chr)) "" value, rest)
@@ -175,3 +180,6 @@ let single_conditional_parser condition =
                                 ParsingSuccess (current_char, String.sub input 1 ((String.length input)-1))
                                 else (ParsingError "condition failed"))
 
+let any_parser =  Parser (fun input -> 
+  if String.length input > 0 then ParsingSuccess (input.[0], (String.sub input 1 ((String.length input)-1))) 
+  else ParsingError "No chars left to parse")
