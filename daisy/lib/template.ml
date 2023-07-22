@@ -4,7 +4,7 @@ type template = TrueExpr | FalseExpr | StringExpr of string | IntExpr of int
   | LocalVariable of string | SiteVariable of string | PageVariable of string 
   | IfExpr of template * template list| TemplateString of string
 let boolean_parser = 
-  Parser (fun input -> match run_parser (any_of [word_parser "true"; word_parser "false"]) input with 
+  Parser (fun input -> match run_parser (any_of [single_word_parser "true"; single_word_parser "false"]) input with 
     ParsingSuccess (value, rest) -> 
       if value = "true" then ParsingSuccess (TrueExpr, rest) else ParsingSuccess (FalseExpr, rest)
     | ParsingError e -> ParsingError e)
@@ -48,16 +48,17 @@ let rec template_expression_parser () =
 and template_with_brackets () = (pure (fun _ e _ -> e) <*> char_parser '(' <*> template_expression_parser () <*> char_parser ')')
 
 
-and if_block_parser () = pure (fun _ _ _ _ exprs _ _ -> exprs ) <*> space_and_newline_parser <*>  word_parser "((" <*> space_and_newline_parser <*> word_parser "if"
+and if_block_parser () = pure (fun _ _ _ _ exprs _ _ -> exprs ) <*> space_and_newline_parser <*>  word_parser "((" <*> space_and_newline_parser <*> single_word_parser "if"
   <*> lazy_parser template_expression_parser <*> word_parser "))" <*> space_and_newline_parser 
 
+let endif_block_parser = pure (fun _ _ _ _ _-> "") <*> word_parser "((" <*> space_and_newline_parser <*> single_word_parser "endif" <*> space_and_newline_parser <*> word_parser "))"
 
 let template_char_parser = pure (fun c -> TemplateString (String.make 1 c)) <*>  any_parser
 
 let rec template_parser () = 
-    let main_parser = pure (fun _ _ n _ -> n ) <*> space_and_newline_parser <*>  word_parser "((" <*> template_expression_parser () <*> word_parser "))" in 
-    any_of [main_parser; lazy_parser if_parser]
+    let main_parser = pure (fun _ n _ -> n )  <*>  word_parser "((" <*> template_expression_parser () <*> word_parser "))" in 
+    pure (fun _ p _ -> p) <*> space_and_newline_parser <*> any_of [main_parser; lazy_parser if_parser] <*> space_and_newline_parser
 
-and if_parser () = pure (fun exprs body _ -> IfExpr (exprs, body)) <*> lazy_parser if_block_parser <*> parse_on_condition (word_parser "(( endif ))") 
-  (any_of [lazy_parser template_parser; template_char_parser]) <*> word_parser "(( endif ))"
+and if_parser () = pure (fun exprs body _  -> IfExpr (exprs, body)) <*> lazy_parser if_block_parser <*> parse_on_condition endif_block_parser
+  (any_of [lazy_parser template_parser; template_char_parser]) <*> endif_block_parser
 
