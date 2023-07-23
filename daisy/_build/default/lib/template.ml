@@ -77,3 +77,10 @@ let rec template_parser () =
 and if_parser () = pure (fun exprs body _  -> IfExpr (exprs, collapse body [])) <*> lazy_parser if_block_parser <*> parse_on_condition endif_block_parser
   (any_of [lazy_parser template_parser; template_char_parser]) <*> endif_block_parser
 
+
+
+let html_parser = 
+  Parser 
+  (fun input -> match (run_parser (zero_or_more (any_of[lazy_parser template_parser; template_char_parser]) ) input) with 
+    ParsingSuccess (value, rest) -> ParsingSuccess (collapse value [], rest)
+    | ParsingError e -> ParsingError e)

@@ -52,6 +52,7 @@ and template_with_brackets () = (pure (fun _ e _ -> e) <*> char_parser '(' <*> t
 and if_block_parser () = pure (fun _ _ _ _ exprs _ _ -> exprs ) <*> space_and_newline_parser <*>  word_parser "((" <*> space_and_newline_parser <*> single_word_parser "if"
   <*> lazy_parser template_expression_parser <*> word_parser "))" <*> space_and_newline_parser 
 
+(* and for_block_parser () = word_parser_with_space "((" <*> single_word_parser_with_space "for" <*>   *)
 let endif_block_parser = pure (fun _ _ _ _ _-> "") <*> word_parser "((" <*> space_and_newline_parser <*> word_parser "endif" <*> space_and_newline_parser <*> word_parser "))"
 
 let template_char_parser = pure (fun c spaces -> TemplateString ((String.make 1 c) ^ List.fold_left (fun str c -> str ^ (chr_to_string c)) "" spaces)) <*> any_parser <*> space_and_newline_parser
@@ -77,3 +78,12 @@ let rec template_parser () =
 and if_parser () = pure (fun exprs body _  -> IfExpr (exprs, collapse body [])) <*> lazy_parser if_block_parser <*> parse_on_condition endif_block_parser
   (any_of [lazy_parser template_parser; template_char_parser]) <*> endif_block_parser
 
+
+(* and for_loop_parser () *)
+
+
+let html_parser = 
+  Parser 
+  (fun input -> match (run_parser (zero_or_more (any_of[lazy_parser template_parser; template_char_parser]) ) input) with 
+    ParsingSuccess (value, rest) -> ParsingSuccess (collapse value [], rest)
+    | ParsingError e -> ParsingError e)

@@ -185,3 +185,7 @@ let any_parser =  Parser (fun input ->
   else ParsingError "No chars left to parse")
 
 let single_word_parser word = pure (fun word _ -> word) <*> word_parser word <*> end_of_word_parser
+
+let single_word_parser_with_space word = pure (fun _ word _ _ -> word) <*> space_and_newline_parser <*> word_parser word <*> end_of_word_parser <*> space_and_newline_parser 
+
+let word_parser_with_space word = pure (fun _ word _ -> word) <*> space_and_newline_parser <*> word_parser word <*> space_and_newline_parser
