@@ -1,7 +1,7 @@
 open Markdown
 open Combinator
 open Template
-let file_to_markdown path = 
+let parse_markdown path = 
   let file = 
     try  Some (open_in path) with 
       _ -> None in 
