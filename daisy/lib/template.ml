@@ -59,7 +59,7 @@ and if_block_parser () = pure (fun _ _ _ _ exprs _ _ -> exprs ) <*> space_and_ne
 
 let template_char_parser = pure (fun c spaces -> TemplateString ((String.make 1 c) ^ List.fold_left (fun str c -> str ^ (chr_to_string c)) "" spaces)) <*> any_parser <*> space_and_newline_parser
 
-let get_header_parser name = pure (fun _ _ _ str _ _ -> str) <*> word_parser "((" <*> space_and_newline_parser <*> single_word_parser_with_space name <*> strings_parser  <*> space_and_newline_parser <*> word_parser "))"
+let get_header_parser name = pure (fun _ _ _ str _ _ -> str) <*> word_parser_with_space "((" <*> space_and_newline_parser <*> single_word_parser_with_space name <*> strings_parser  <*> space_and_newline_parser <*> word_parser_with_space "))"
 
 let import_partial_parser = pure (fun str -> UsePartial str) <*> get_header_parser "usepartial"
 
@@ -86,9 +86,15 @@ let rec collapse lst output =
     | (x::xs) -> match x with 
       TemplateString str -> collapse xs (collapse_char str output)  
       | _ -> collapse xs (List.cons x output)
+
+let collapse_template template = 
+  match template with 
+    IfExpr (condition, body) -> IfExpr (condition, collapse body [])
+    | SectionDef (name, body) ->  SectionDef (name, collapse body [])
+    | _ -> template
 let rec template_parser () = 
     let main_parser = pure (fun _ n _ -> n )  <*>  word_parser "((" <*> template_expression_parser () <*> word_parser "))" in 
-    pure (fun _ p _ -> p) <*> space_and_newline_parser <*> any_of [main_parser; lazy_parser if_parser; lazy_parser section_definition_parser] <*> space_and_newline_parser
+    pure (fun _ p _ -> p) <*> space_and_newline_parser <*> any_of [main_parser; lazy_parser if_parser; lazy_parser section_definition_parser; import_partial_parser] <*> space_and_newline_parser
 
 and if_parser () = pure (fun exprs body _  -> IfExpr (exprs, collapse body [])) <*> lazy_parser if_block_parser <*> parse_on_condition endif_block_parser
   (any_of [lazy_parser template_parser; template_char_parser]) <*> endif_block_parser

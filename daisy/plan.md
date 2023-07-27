@@ -71,4 +71,7 @@ DOES THE LOOKUP ORDER.
     
 
 
+# New Plan
+
+- Each site has 2 folders : content AND themes 
 
