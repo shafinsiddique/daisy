@@ -3,14 +3,14 @@
 (** @canonical Daisy.Combinator *)
 module Combinator = Daisy__Combinator
 
+(** @canonical Daisy.Converter *)
+module Converter = Daisy__Converter
+
 (** @canonical Daisy.Expression *)
 module Expression = Daisy__Expression
 
 (** @canonical Daisy.Markdown *)
 module Markdown = Daisy__Markdown
-
-(** @canonical Daisy.Markdown_page *)
-module Markdown_page = Daisy__Markdown_page
 
 (** @canonical Daisy.Reader *)
 module Reader = Daisy__Reader

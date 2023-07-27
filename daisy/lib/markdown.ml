@@ -4,6 +4,8 @@ type markdown = Heading of {level: int; components: markdown list} | MarkdownCha
   | Bold of (markdown list) | Italic of (markdown list) | Link of {components: markdown list; url: string}
   | Paragraph of (markdown list) | MarkdownString of string
 
+type markdown_page = MarkdownPage of (markdown list)
+
 let space_and_newline_parser = zero_or_more (any_of [char_parser ' '; char_parser '\n'])
 
 let markdown_char_parser = 

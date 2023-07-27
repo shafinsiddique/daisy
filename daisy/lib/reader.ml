@@ -2,11 +2,11 @@ open Markdown
 open Combinator
 open Template
 open Expression
-
+open Converter
 module StringMap = Map.Make(String)
 
 
-type markdown_page = MarkdownPage of {page_variables: (expression StringMap.t); site_variables: (expression StringMap.t)} 
+type content_page = ContentPage of {page_variables: (expression StringMap.t); site_variables: (expression StringMap.t)} 
 
 let parse_markdown path = 
   let file = 
@@ -17,7 +17,7 @@ let parse_markdown path =
         let file_str = really_input_string ic (in_channel_length ic) in 
           (match run_parser markdown_parser file_str with 
             ParsingError _ -> None 
-            | ParsingSuccess (value, _) -> Some value)
+            | ParsingSuccess (value, _) -> Some (MarkdownPage value))
       | None -> None 
   
   
@@ -33,14 +33,13 @@ let parse_html path =
             | ParsingError _ -> None)
         | None -> None 
 
-let markdown_to_html_string markdown = ""
 let get_page_variables markdown = 
   let items = [("content", StringExpression (markdown_to_html_string markdown))] in 
     List.fold_left (fun m (key, value) -> StringMap.add key value m) StringMap.empty items
     
 let create_markdown_page markdown = 
   let page_variables = get_page_variables markdown in 
-    MarkdownPage {page_variables=page_variables; site_variables=StringMap.empty}
+    ContentPage {page_variables=page_variables; site_variables=StringMap.empty}
 
 (* 
 let markdown_to_html path = 
