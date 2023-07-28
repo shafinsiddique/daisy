@@ -20,6 +20,18 @@ let parse_markdown path =
             | ParsingSuccess (value, _) -> Some (MarkdownPage value))
       | None -> None 
   
+let parse_markdown2 path = 
+  let file = 
+    try  Some (open_in path) with 
+      _ -> None in 
+    match file with 
+      Some ic -> 
+        let file_str = really_input_string ic (in_channel_length ic) in 
+          (match run_parser markdown_parser file_str with 
+            ParsingError _ -> None 
+            | ParsingSuccess (value, _) -> Some (markdown_to_html_string (MarkdownPage value)))
+      | None -> None 
+  
   
 let parse_html path = 
   let file = 
