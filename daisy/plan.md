@@ -75,3 +75,29 @@ DOES THE LOOKUP ORDER.
 
 - Each site has 2 folders : content AND themes 
 
+# Process
+
+- We start with root directory. 
+
+- get markdown file. 
+
+- if index.md in root then it is homepage. 
+
+- to look for its corresponding HTML page, here is the order:
+    - index.html in root directory of layouts. 
+    - list.html in root directory of layouts. 
+    - defaults/index.html
+    - defaults/list.html
+
+- Now sections page. 
+- go into another directory
+
+    - if _index.md file then 
+        : section/list.html in that corresponding direcotry 
+        : section/index.html in thhat corresponding directory. 
+        : default/list.html
+        : default/index.html
+
+
+
+
