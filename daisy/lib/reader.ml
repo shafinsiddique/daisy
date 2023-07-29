@@ -3,10 +3,10 @@ open Combinator
 open Template
 open Expression
 open Converter
+open Content_page
 module StringMap = Map.Make(String)
 
 
-type content_page = ContentPage of {page_variables: (expression StringMap.t); site_variables: (expression StringMap.t)} 
 
 let parse_markdown path = 
   let file = 
@@ -52,7 +52,22 @@ let get_page_variables markdown =
 let create_markdown_page markdown = 
   let page_variables = get_page_variables markdown in 
     ContentPage {page_variables=page_variables; site_variables=StringMap.empty}
+(* 
+let rec template_to_string items content_page output = 
+  match items with 
+  [] -> (List.fold_left (fun str item -> str ^ item) "" (List.rev output))
+  | (x::xs) -> template_node_to_string x 
 
+and template_node_to_string node = match node with 
+  TemplateString str -> str 
+  | StringExpr str -> str 
+  | TrueExpr -> "true"
+  | FalseExpr -> "false"
+  | IntExpr value -> string_of_int value 
+  |  *)
+(* let generate_html template_page content_page = 
+  let (TemplatePage items) = template_page in 
+    template_to_string items content_page [] *)
 (* 
 let markdown_to_html path = 
   let md_file = parse_markdown path in 

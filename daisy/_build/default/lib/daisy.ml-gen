@@ -3,8 +3,14 @@
 (** @canonical Daisy.Combinator *)
 module Combinator = Daisy__Combinator
 
+(** @canonical Daisy.Content_page *)
+module Content_page = Daisy__Content_page
+
 (** @canonical Daisy.Converter *)
 module Converter = Daisy__Converter
+
+(** @canonical Daisy.Evaluator *)
+module Evaluator = Daisy__Evaluator
 
 (** @canonical Daisy.Expression *)
 module Expression = Daisy__Expression

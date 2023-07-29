@@ -1,9 +1,12 @@
 open Combinator
 
 type template = TrueExpr | FalseExpr | StringExpr of string | IntExpr of int 
-  | LocalVariable of string | SiteVariable of string | PageVariable of string 
+  | SiteVariable of string | PageVariable of string 
   | IfExpr of template * template list| TemplateString of string 
   | UsePartial of string | SectionDef of (string * template list)
+
+type template_page = TemplatePage of (template list)
+
 let boolean_parser = 
   Parser (fun input -> match run_parser (any_of [single_word_parser "true"; single_word_parser "false"]) input with 
     ParsingSuccess (value, rest) -> 
@@ -34,10 +37,10 @@ let _local_variable_name_parser =
   let letters = (List.map char_parser (List.map Char.chr (List.append (create_list 97 123 []) (create_list 65 90 [])))) in 
   pure (fun first rest -> (List.fold_left (fun str chr -> str ^ (String.make 1 chr)) "" (List.cons first rest))) <*> (any_of letters) <*> zero_or_more (any_of (List.append letters [char_parser '_'])) 
   
-let local_variable_parser = 
+(* let local_variable_parser = 
   Parser (fun input -> match (run_parser _local_variable_name_parser input) with 
     ParsingSuccess (str, rest) -> ParsingSuccess (LocalVariable str, rest)
-    | ParsingError e -> ParsingError e)
+    | ParsingError e -> ParsingError e) *)
   
 let chr_to_string c = String.make 1 c
 let site_variable_parser = pure (fun _ name ->  SiteVariable name)  <*> word_parser ".Site." <*> _local_variable_name_parser 
@@ -46,7 +49,7 @@ let page_variable_parser = pure (fun _ name -> PageVariable name) <*> word_parse
 
 let rec template_expression_parser () = 
   (* let with_brackets p =  in  *)
-    pure (fun _ n _ -> n) <*> space_and_newline_parser <*> any_of [lazy_parser template_with_brackets; boolean_parser; template_strings_parser; integer_parser; site_variable_parser; page_variable_parser; local_variable_parser] <*>  space_and_newline_parser
+    pure (fun _ n _ -> n) <*> space_and_newline_parser <*> any_of [lazy_parser template_with_brackets; boolean_parser; template_strings_parser; integer_parser; site_variable_parser; page_variable_parser;] <*>  space_and_newline_parser
   
 and template_with_brackets () = (pure (fun _ e _ -> e) <*> char_parser '(' <*> template_expression_parser () <*> char_parser ')')
 

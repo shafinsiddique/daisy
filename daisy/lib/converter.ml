@@ -35,5 +35,3 @@ and
 markdown_to_html_string page = 
   let (MarkdownPage items) = page in 
     List.fold_left (fun str item -> Printf.sprintf "%s%s\n" str item) "" (List.map markdown_to_html items)
-
-  
