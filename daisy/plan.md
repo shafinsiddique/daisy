@@ -100,4 +100,27 @@ DOES THE LOOKUP ORDER.
 
 
 
+daisy build --directory="."
+Start reading files from that directory. 
+If it is HOME then 
+    lookup order : 
+        index.html in the corresponding directory. 
+        if not
+        list.html in corresponding directory 
+        if not 
+        default.html in default directory 
+        if not 
+        list.html in default directory 
+
+If if it is regular index.md file then 
+       lookup order : 
+        index.html in the corresponding directory. 
+        if not
+        list.html in corresponding directory 
+        if not
+        list.html in default directory 
+        if not 
+        default.html in default directory 
+
+
 
