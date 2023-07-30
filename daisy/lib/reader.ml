@@ -4,6 +4,7 @@ open Template
 open Expression
 open Converter
 open Content_page
+open Evaluator
 module StringMap = Map.Make(String)
 
 
@@ -41,7 +42,7 @@ let parse_html path =
       Some ic -> 
         let file_str = really_input_string ic (in_channel_length ic) in 
           (match (run_parser html_parser file_str) with 
-            ParsingSuccess (value, _) -> Some value 
+            ParsingSuccess (value, _) -> Some (TemplatePage value)
             | ParsingError _ -> None)
         | None -> None 
 
@@ -68,13 +69,17 @@ and template_node_to_string node = match node with
 (* let generate_html template_page content_page = 
   let (TemplatePage items) = template_page in 
     template_to_string items content_page [] *)
-(* 
-let markdown_to_html path = 
+
+let markdown_to_html path path2 = 
   let md_file = parse_markdown path in 
     match md_file with 
       Some markdown -> 
-        Some ()
-      | None -> None *)
+        let content_page = create_markdown_page markdown in 
+          let html_page = parse_html path2  
+        in (match html_page with
+            Some template_page -> Some (evaluate_template_page template_page content_page)
+            | _ -> None)
+      | None -> None
 
         
     

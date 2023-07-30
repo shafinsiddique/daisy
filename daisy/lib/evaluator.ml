@@ -1,18 +1,29 @@
 open Template
 open Expression
 open Content_page
-
+open Combinator
 module StringMap = Map.Make(String)
 
-let read_html_page _ = 
-    Some (TemplatePage [])
+
+let read_html_page path = 
+  let file = 
+    try Some (open_in path) with 
+      _ -> None in 
+    match file with 
+      Some ic -> 
+        let file_str = really_input_string ic (in_channel_length ic) in 
+          (match (run_parser html_parser file_str) with 
+            ParsingSuccess (value, _) -> Some (TemplatePage value)
+            | ParsingError _ -> None)
+        | None -> None 
+    
 let deconstruct_list_expression expression = match expression with 
   | ListExpression lst -> lst 
   | _ -> []
 let get_variable variable_map key = 
   match StringMap.find_opt key variable_map with 
     Some value -> value
-    | None -> ErrorExpression
+    | None -> ErrorExpression (Printf.sprintf "Error in finding variable %s" key)
 
 let rec evaluate_items items content_page output =
   match items with 

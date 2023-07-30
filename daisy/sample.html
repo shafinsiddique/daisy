@@ -1,14 +1,7 @@
-(( usepartial "default.html"))
-
-(( section "main"))
-
-<bdoy>
-    <html>
-        
-    </html>
-</bdoy>
-
-(( endsection ))
-
-
-(( usesection "main"))
+<html>
+    <body>
+        (( usepartial "./partial.html" ))
+        (( .Page.content ))
+        (( "Hello World" ))
+    </body>
+</html>
