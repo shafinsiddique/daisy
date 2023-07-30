@@ -3,7 +3,7 @@ open Combinator
 type template = TrueExpr | FalseExpr | StringExpr of string | IntExpr of int 
   | SiteVariable of string | PageVariable of string 
   | IfExpr of template * template list| TemplateString of string 
-  | UsePartial of string | SectionDef of (string * template list)
+  | UseBase of string | SectionDef of (string * template list) | UsePartial of string
 
 type template_page = TemplatePage of (template list)
 
@@ -64,8 +64,10 @@ let template_char_parser = pure (fun c spaces -> TemplateString ((String.make 1 
 
 let get_header_parser name = pure (fun _ _ _ str _ _ -> str) <*> word_parser_with_space "((" <*> space_and_newline_parser <*> single_word_parser_with_space name <*> strings_parser  <*> space_and_newline_parser <*> word_parser_with_space "))"
 
-let import_partial_parser = pure (fun str -> UsePartial str) <*> get_header_parser "usepartial"
+let use_base_parser = pure (fun str -> UseBase str) <*> get_header_parser "usebase"
 
+
+let use_partial_parser = pure (fun str -> UsePartial str) <*> get_header_parser "usepartial"
 
 
 (* let section_header_parser = get_header_parser "section" <*>  *)
@@ -97,7 +99,7 @@ let collapse_template template =
     | _ -> template
 let rec template_parser () = 
     let main_parser = pure (fun _ n _ -> n )  <*>  word_parser "((" <*> template_expression_parser () <*> word_parser "))" in 
-    pure (fun _ p _ -> p) <*> space_and_newline_parser <*> any_of [main_parser; lazy_parser if_parser; lazy_parser section_definition_parser; import_partial_parser] <*> space_and_newline_parser
+    pure (fun _ p _ -> p) <*> space_and_newline_parser <*> any_of [main_parser; lazy_parser if_parser; lazy_parser section_definition_parser; use_base_parser; use_partial_parser] <*> space_and_newline_parser
 
 and if_parser () = pure (fun exprs body _  -> IfExpr (exprs, collapse body [])) <*> lazy_parser if_block_parser <*> parse_on_condition endif_block_parser
   (any_of [lazy_parser template_parser; template_char_parser]) <*> endif_block_parser

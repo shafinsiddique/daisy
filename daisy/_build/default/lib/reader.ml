@@ -51,7 +51,7 @@ let get_page_variables markdown =
     
 let create_markdown_page markdown = 
   let page_variables = get_page_variables markdown in 
-    ContentPage {page_variables=page_variables; site_variables=StringMap.empty}
+    create_content_page page_variables (StringMap.empty) (StringMap.empty)
 (* 
 let rec template_to_string items content_page output = 
   match items with 
