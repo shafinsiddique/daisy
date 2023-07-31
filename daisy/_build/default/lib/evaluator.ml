@@ -2,6 +2,7 @@ open Template
 open Expression
 open Content_page
 open Combinator
+
 module StringMap = Map.Make(String)
 
 
@@ -37,9 +38,12 @@ and evaluate_node node content_page =
               true -> evaluate_items body content_page []
               | false -> EmptyExpression)
       | _ -> EmptyExpression in
-  let evaluate_partial path = match read_html_page path with 
+  let evaluate_partial_from_path path = match read_html_page path with 
       Some page -> ListExpression (evaluate_template_page page content_page)
       | None -> EmptyExpression in 
+    let evaluate_partial expression = match evaluate_node expression content_page with 
+        StringExpression path -> evaluate_partial_from_path path
+        | _ -> ErrorExpression "Expected string expression, got something else in usepartial." in 
   match node with 
     TemplateString str -> StringExpression str
     | IntExpr value -> IntExpression value
@@ -51,7 +55,21 @@ and evaluate_node node content_page =
     | UseBase _ -> EmptyExpression 
     | IfExpr (condition, body) -> evaluate_if condition body 
     | SectionDef _ -> EmptyExpression
-    | UsePartial path -> evaluate_partial path 
+    | UsePartial expression -> evaluate_partial expression 
+    | Concat strs -> evaluate_concat strs content_page
+
+and evaluate_concat strs content_page = 
+  let exprs = deconstruct_list_expression (evaluate_items strs content_page []) in 
+  let rec concat_exprs exprs output_str = 
+    match exprs with 
+      [] -> Some (output_str)
+      | (x::xs) -> match x with 
+        StringExpression value -> concat_exprs xs (output_str^value)
+        | _ -> None
+  in match (concat_exprs exprs "") with 
+    Some value -> StringExpression value 
+    | None -> ErrorExpression "error concatatenting"
+
 and evaluate_sections sections map content_page = 
 
   match sections with 

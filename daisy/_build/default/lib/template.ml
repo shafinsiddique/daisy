@@ -3,7 +3,8 @@ open Combinator
 type template = TrueExpr | FalseExpr | StringExpr of string | IntExpr of int 
   | SiteVariable of string | PageVariable of string 
   | IfExpr of template * template list| TemplateString of string 
-  | UseBase of string | SectionDef of (string * template list) | UsePartial of string
+  | UseBase of string | SectionDef of (string * template list) | UsePartial of template 
+  | Concat of (template list)
 
 type template_page = TemplatePage of (template list)
 
@@ -49,7 +50,7 @@ let page_variable_parser = pure (fun _ name -> PageVariable name) <*> word_parse
 
 let rec template_expression_parser () = 
   (* let with_brackets p =  in  *)
-    pure (fun _ n _ -> n) <*> space_and_newline_parser <*> any_of [lazy_parser template_with_brackets; boolean_parser; template_strings_parser; integer_parser; site_variable_parser; page_variable_parser;] <*>  space_and_newline_parser
+    pure (fun _ n _ -> n) <*> space_and_newline_parser <*> any_of [lazy_parser template_with_brackets; boolean_parser; template_strings_parser; lazy_parser concat_parser; integer_parser; site_variable_parser; page_variable_parser; ] <*>  space_and_newline_parser
   
 and template_with_brackets () = (pure (fun _ e _ -> e) <*> char_parser '(' <*> template_expression_parser () <*> char_parser ')')
 
@@ -59,15 +60,18 @@ and if_block_parser () = pure (fun _ _ _ _ exprs _ _ -> exprs ) <*> space_and_ne
 
 (* and for_block_parser () = word_parser_with_space "((" <*> single_word_parser_with_space "for" <*>   *)
 
-
+and concat_parser () = pure (fun _ exprs -> Concat exprs) <*> word_parser "concat" <*> one_or_more (lazy_parser template_expression_parser)  
 let template_char_parser = pure (fun c spaces -> TemplateString ((String.make 1 c) ^ List.fold_left (fun str c -> str ^ (chr_to_string c)) "" spaces)) <*> any_parser <*> space_and_newline_parser
 
 let get_header_parser name = pure (fun _ _ _ str _ _ -> str) <*> word_parser_with_space "((" <*> space_and_newline_parser <*> single_word_parser_with_space name <*> strings_parser  <*> space_and_newline_parser <*> word_parser_with_space "))"
 
-let use_base_parser = pure (fun str -> UseBase str) <*> get_header_parser "usebase"
+let get_header_with_expression_parser name = pure (fun _ _ _ template _ -> template) <*> word_parser_with_space "((" <*> space_and_newline_parser <*> single_word_parser_with_space name <*> lazy_parser template_expression_parser <*> word_parser_with_space "))"
 
 
-let use_partial_parser = pure (fun str -> UsePartial str) <*> get_header_parser "usepartial"
+let use_base_parser = pure (fun template -> UseBase template) <*> get_header_parser "usebase"
+
+
+let use_partial_parser = pure (fun template -> UsePartial template) <*> get_header_with_expression_parser "usepartial"
 
 
 (* let section_header_parser = get_header_parser "section" <*>  *)

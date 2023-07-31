@@ -9,15 +9,15 @@ let ends_with str value =
   String.sub str ((String.length str)-length) length = value
 let is_markdown file = ends_with file ".md"
 
-
-
 let get_page_variables markdown = 
   let items = [("content", StringExpression (markdown_to_html_string markdown))] in 
     List.fold_left (fun m (key, value) -> StringMap.add key value m) StringMap.empty items
-
-let create_content_page_from_markdown markdown = 
+let get_site_variables root = 
+  let items = [("root", StringExpression root)] in 
+    List.fold_left (fun m (key, value) -> StringMap.add key value m) StringMap.empty items
+let create_content_page_from_markdown markdown root = 
   let page_variables = get_page_variables markdown in 
-    create_content_page page_variables (StringMap.empty) (StringMap.empty)
+    create_content_page page_variables (get_site_variables root) (StringMap.empty)
 
 let get_section_path md_file_path =
   let rec join_paths paths str = 
@@ -89,14 +89,14 @@ let generate_from_markdown root md_file_name md_file_path layouts_dir =
   match (parse_markdown md_file_path) with 
     Some md_page -> 
       let section_path = get_section_path md_file_path in 
-        let content_page = create_content_page_from_markdown md_page in
+        let content_page = create_content_page_from_markdown md_page root in
           let html_page = get_corresponding_html md_file_name section_path layouts_dir in 
             (match html_page with 
               Some template_page -> 
                 let html_str = get_page_string content_page template_page in 
                   let () = create_dir (join_paths [root; "public"]) in 
                   let () = write_to_html_file (join_paths [root; "public"; section_path; remove_file_extension md_file_name ^ ".html"]) html_str in 
-                  Printf.printf "Succesfully generated file %s" (remove_file_extension md_file_name  ^ ".html\n")
+                  Printf.printf "Succesfully generated file: %s" (remove_file_extension md_file_name  ^ ".html\n")
               | None -> Printf.printf "found no matching html files ")
     | None -> ()
 let rec generate_from_dir root content_dir layouts_dir = 
