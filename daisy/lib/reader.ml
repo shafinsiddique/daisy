@@ -1,10 +1,6 @@
 open Markdown
 open Combinator
 open Template
-open Expression
-open Converter
-open Content_page
-open Evaluator
 module StringMap = Map.Make(String)
 
 
@@ -31,7 +27,7 @@ let parse_html path =
             ParsingSuccess (value, _) -> Some (TemplatePage value)
             | ParsingError _ -> None)
         | None -> None 
-
+(* 
 let get_page_variables markdown = 
   let items = [("content", StringExpression (markdown_to_html_string markdown))] in 
     List.fold_left (fun m (key, value) -> StringMap.add key value m) StringMap.empty items
@@ -49,7 +45,7 @@ let markdown_to_html path path2 =
         in (match html_page with
             Some template_page -> Some (evaluate_template_page template_page content_page)
             | _ -> None)
-      | None -> None
+      | None -> None *)
 
         
     
