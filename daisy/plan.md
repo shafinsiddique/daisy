@@ -124,3 +124,14 @@ If if it is regular index.md file then
 
 
 
+
+
+Next Steps: 
+
+- Ternary operator : Will help us fix the relative linking issue. 
+    - boolean expression ? expression : expression - done.
+- Debug mode vs prod mode. - Done 
+- copy directories. 
+- loop 
+- metadata
+

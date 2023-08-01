@@ -4,6 +4,12 @@ open Daisy.Expression
 open Daisy.Converter
 open Daisy.Evaluator
 open Daisy.Reader
+
+type mode = Debug | Prod
+let root = ref ""
+
+let mode = ref Debug
+
 let ends_with str value = 
   let length = String.length value in 
   String.sub str ((String.length str)-length) length = value
@@ -15,9 +21,9 @@ let get_page_variables markdown =
 let get_site_variables root = 
   let items = [("root", StringExpression root)] in 
     List.fold_left (fun m (key, value) -> StringMap.add key value m) StringMap.empty items
-let create_content_page_from_markdown markdown root = 
+let create_content_page_from_markdown markdown = 
   let page_variables = get_page_variables markdown in 
-    create_content_page page_variables (get_site_variables root) (StringMap.empty)
+    create_content_page page_variables (get_site_variables !root) (StringMap.empty)
 
 let get_section_path md_file_path =
   let rec join_paths paths str = 
@@ -85,37 +91,40 @@ let write_to_html_file file_path html_str =
 
 let create_dir name = 
   if file_exists name then () else mkdir name 0o775
-let generate_from_markdown root md_file_name md_file_path layouts_dir = 
+let generate_from_markdown md_file_name md_file_path layouts_dir = 
   match (parse_markdown md_file_path) with 
     Some md_page -> 
       let section_path = get_section_path md_file_path in 
-        let content_page = create_content_page_from_markdown md_page root in
+        let content_page = create_content_page_from_markdown md_page in
           let html_page = get_corresponding_html md_file_name section_path layouts_dir in 
             (match html_page with 
               Some template_page -> 
                 let html_str = get_page_string content_page template_page in 
-                  let () = create_dir (join_paths [root; "public"]) in 
-                  let () = write_to_html_file (join_paths [root; "public"; section_path; remove_file_extension md_file_name ^ ".html"]) html_str in 
+                  let () = create_dir (join_paths [!root; "public"]) in 
+                  let () = write_to_html_file (join_paths [!root; "public"; section_path; remove_file_extension md_file_name ^ ".html"]) html_str in 
                   Printf.printf "Succesfully generated file: %s" (remove_file_extension md_file_name  ^ ".html\n")
               | None -> Printf.printf "found no matching html files ")
     | None -> ()
-let rec generate_from_dir root content_dir layouts_dir = 
+let rec generate_from_dir content_dir layouts_dir = 
   let rec process_content_files content_files = 
     match content_files with 
       [] -> ()
       | (x::xs) -> let file_name = Printf.sprintf "%s/%s" content_dir x in 
         if is_directory file_name then 
-          let () = generate_from_dir root file_name layouts_dir in process_content_files xs 
+          let () = generate_from_dir file_name layouts_dir in process_content_files xs 
         else
           if is_markdown file_name then 
-            let _ = generate_from_markdown root x file_name layouts_dir in process_content_files xs in 
+            let _ = generate_from_markdown x file_name layouts_dir in process_content_files xs in 
   let content_files = readdir content_dir in 
   process_content_files (Array.to_list content_files)  
-let build_from_dir path = 
-  let content_dir = (Printf.sprintf "%s/content" path) in 
-  let layouts_dir = (Printf.sprintf "%s/layouts" path) in 
+let build_site = 
+  let content_dir = (Printf.sprintf "%s/content" !root) in 
+  let layouts_dir = (Printf.sprintf "%s/layouts" !root) in 
   if file_exists content_dir then 
-    (if file_exists layouts_dir then (generate_from_dir path content_dir layouts_dir) else (Printf.printf "No layout directory"))
+    (if file_exists layouts_dir then (generate_from_dir content_dir layouts_dir) else (Printf.printf "No layout directory"))
     else (Printf.printf "No content directory")
   
-let () = build_from_dir "./sample_site"
+let () =
+  let () = root := "./sample_site" in 
+  let () = mode := Debug in 
+  build_site 

@@ -57,6 +57,7 @@ and evaluate_node node content_page =
     | SectionDef _ -> EmptyExpression
     | UsePartial expression -> evaluate_partial expression 
     | Concat strs -> evaluate_concat strs content_page
+    | Ternary (condition, option1, option2) -> evaluate_ternary condition option1 option2 content_page
 
 and evaluate_concat strs content_page = 
   let exprs = deconstruct_list_expression (evaluate_items strs content_page []) in 
@@ -70,6 +71,11 @@ and evaluate_concat strs content_page =
     Some value -> StringExpression value 
     | None -> ErrorExpression "error concatatenting"
 
+and evaluate_ternary condition option1 option2 content_page= 
+  match (evaluate_node condition content_page) with 
+    BoolExpression value -> 
+        if value then (evaluate_node option1 content_page) else (evaluate_node option2 content_page)
+    | _ -> ErrorExpression "Expected boolean expression in ternary expression"
 and evaluate_sections sections map content_page = 
 
   match sections with 
