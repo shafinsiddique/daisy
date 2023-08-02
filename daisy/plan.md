@@ -134,4 +134,6 @@ Next Steps:
 - copy directories. 
 - loop 
 - metadata
+- lists
+
 
