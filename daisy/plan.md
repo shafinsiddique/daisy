@@ -122,18 +122,24 @@ If if it is regular index.md file then
         if not 
         default.html in default directory 
 
+Loop Syntax
+
+(( for var in expression ))
 
 
+Local Variable :
 
-
+    name := expression
 Next Steps: 
 
 - Ternary operator : Will help us fix the relative linking issue. 
     - boolean expression ? expression : expression - done.
 - Debug mode vs prod mode. - Done 
-- copy directories. 
-- loop 
+- copy directories - Done. 
+- Local Variables - Done
+- loop - 
 - metadata
-- lists
+- lists in markdown. 
+
 
 

@@ -15,7 +15,8 @@ let ends_with str value =
 let is_markdown file = ends_with file ".md"
 
 let get_page_variables markdown = 
-  let items = [("content", StringExpression (markdown_to_html_string markdown))] in 
+  let lst = [IntExpression 1; IntExpression 2; IntExpression 3; IntExpression 4] in 
+  let items = [("content", StringExpression (markdown_to_html_string markdown)); ("items", ListExpression lst)] in 
     List.fold_left (fun m (key, value) -> StringMap.add key value m) StringMap.empty items
 let get_site_variables root = 
   let items = [("root", StringExpression root); ("prod", BoolExpression !prod)] in 

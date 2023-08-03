@@ -26,10 +26,15 @@ let get_variable variable_map key =
     Some value -> value
     | None -> ErrorExpression (Printf.sprintf "Error in finding variable %s" key)
 
+let set_local_variable name value content_page = 
+    let (ContentPage info) = content_page in 
+    info.local_variables <- StringMap.add name value (info.local_variables) 
 let rec evaluate_items items content_page output =
   match items with 
     [] -> ListExpression (List.rev output)
     | (x::xs) -> evaluate_items xs content_page (List.cons (evaluate_node x content_page) output)
+
+
 and evaluate_node node content_page = 
   let (ContentPage info) = content_page in 
   let evaluate_if condition body =  match (evaluate_node condition content_page ) with 
@@ -58,6 +63,9 @@ and evaluate_node node content_page =
     | UsePartial expression -> evaluate_partial expression 
     | Concat strs -> evaluate_concat strs content_page
     | Ternary (condition, option1, option2) -> evaluate_ternary condition option1 option2 content_page
+    | LocalVariable name -> (get_variable info.local_variables name)
+    | VariableDefinition (name, expression) -> evaluate_variable_def name expression content_page
+    | ForLoop (name, condition, body) -> evaluate_for name condition body content_page
 
 and evaluate_concat strs content_page = 
   let exprs = deconstruct_list_expression (evaluate_items strs content_page []) in 
@@ -84,6 +92,23 @@ and evaluate_sections sections map content_page =
       SectionDef (name, body) -> evaluate_sections xs (StringMap.add name (evaluate_items body content_page []) map) content_page
       | _ -> evaluate_sections xs map content_page)
     
+and evaluate_variable_def name expression content_page = 
+    let res = evaluate_node expression content_page in 
+    let () = set_local_variable name res content_page in
+    EmptyExpression
+
+and evaluate_for name condition body content_page = 
+  let rec evaluate_from_lst lst output = 
+    match lst with 
+      [] -> ListExpression (List.rev output)
+      | (x::xs) -> 
+          let () = set_local_variable name x content_page in 
+          let body_evaluated = evaluate_items body content_page [] in 
+          evaluate_from_lst xs (List.cons body_evaluated output) in 
+  let lst = evaluate_node condition content_page in 
+  match lst with 
+      ListExpression value -> (evaluate_from_lst value [])
+      | _ -> EmptyExpression
 and get_sections items content_page = 
   evaluate_sections (List.filter (fun node -> match node with 
     | SectionDef _ -> true

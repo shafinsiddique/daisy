@@ -10,4 +10,4 @@ let rec string_of_expression expr = match expr with
   | EmptyExpression -> ""
   | ListExpression exprs -> List.fold_left (fun str item -> str ^ item) "" (List.map string_of_expression exprs) 
 
-let strings_of_expressions exprs = List.fold_left (fun str item -> str ^ item) "" (List.map string_of_expression exprs)
+let strings_of_expressions exprs = List.fold_left (fun str item -> str ^ item ^ "\n") "" (List.map string_of_expression exprs)
