@@ -66,6 +66,7 @@ and evaluate_node node content_page =
     | LocalVariable name -> (get_variable info.local_variables name)
     | VariableDefinition (name, expression) -> evaluate_variable_def name expression content_page
     | ForLoop (name, condition, body) -> evaluate_for name condition body content_page
+    | Metadata _ -> EmptyExpression
 
 and evaluate_concat strs content_page = 
   let exprs = deconstruct_list_expression (evaluate_items strs content_page []) in 

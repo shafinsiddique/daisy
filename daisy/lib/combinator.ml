@@ -189,3 +189,9 @@ let single_word_parser word = pure (fun word _ -> word) <*> word_parser word <*>
 let single_word_parser_with_space word = pure (fun _ word _ _ -> word) <*> space_and_newline_parser <*> word_parser word <*> end_of_word_parser <*> space_and_newline_parser 
 
 let word_parser_with_space word = pure (fun _ word _ -> word) <*> space_and_newline_parser <*> word_parser word <*> space_and_newline_parser
+
+let space_parser = zero_or_more (char_parser ' ')
+let ends_with_newline_parser = pure (fun _ _ _ -> "") 
+  <*> space_parser 
+  <*> char_parser '\n' 
+  <*> space_and_newline_parser  

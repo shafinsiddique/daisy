@@ -8,6 +8,7 @@ type template = TrueExpr | FalseExpr | StringExpr of string | IntExpr of int
   | VariableDefinition of (string * template)
   | LocalVariable of string 
   | ForLoop of (string * template * template list)
+  | Metadata of ((string * string) list)
 
 type template_page = TemplatePage of (template list)
 
@@ -84,7 +85,6 @@ let use_base_parser = pure (fun template -> UseBase template) <*> get_header_par
 
 let use_partial_parser = pure (fun template -> UsePartial template) <*> get_header_with_expression_parser "usepartial"
 
-
 (* let section_header_parser = get_header_parser "section" <*>  *)
 
 (* let section_definition_parser =  *)
@@ -100,7 +100,17 @@ let collapse_char str output =
     | (x::xs) -> match x with 
       TemplateString existing -> List.cons (TemplateString (existing ^ str)) xs 
       | _ -> List.cons (TemplateString str) output
-  
+
+let metadata_heading_parser = pure (fun _ _ -> "") <*> word_parser "---" <*> ends_with_newline_parser
+
+let metadata_item_parser = pure (fun key _ _ value _ -> (key, value)) <*> strings_parser <*> space_parser <*> word_parser ":" <*> strings_parser <*> ends_with_newline_parser
+
+let metadata_ending_parser = pure (fun _ _ -> "") <*> word_parser "---" <*> ends_with_newline_parser
+let metadata_parser = pure (fun _ items _ -> Metadata items) 
+  <*> metadata_heading_parser 
+  <*> one_or_more metadata_item_parser 
+  <*> metadata_ending_parser
+
 let rec collapse lst output =
   match lst with 
     [] -> List.rev output 
@@ -129,6 +139,6 @@ and section_definition_parser () =
 
 let html_parser = 
   Parser 
-  (fun input -> match (run_parser (zero_or_more (any_of[lazy_parser template_parser; template_char_parser]) ) input) with 
+  (fun input -> match (run_parser (zero_or_more (any_of[lazy_parser template_parser; metadata_parser; template_char_parser]) ) input) with 
     ParsingSuccess (value, rest) -> ParsingSuccess (collapse value [], rest)
     | ParsingError e -> ParsingError e)

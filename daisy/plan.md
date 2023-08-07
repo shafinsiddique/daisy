@@ -126,6 +126,11 @@ Loop Syntax
 
 (( for var in expression ))
 
+~~~
+title: Hello World
+description: A world without fear. 
+date: idk
+~~~
 
 Local Variable :
 
@@ -137,8 +142,8 @@ Next Steps:
 - Debug mode vs prod mode. - Done 
 - copy directories - Done. 
 - Local Variables - Done
-- loop - 
-- metadata
+- loop - Done
+- metadata 
 - lists in markdown. 
 
 
