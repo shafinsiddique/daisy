@@ -1,12 +1,7 @@
 <body>
-    (( for xvar in .Page.items ))
-    <p>
-        (( xvar ))
+    (( for var in .Page.sectionMetadata ))
 
-    </p>
+    (( var ))
 
     (( endfor ))
-
-
-    ((.Page.content))
 </body>

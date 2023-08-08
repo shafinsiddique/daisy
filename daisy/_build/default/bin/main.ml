@@ -4,6 +4,7 @@ open Daisy.Expression
 open Daisy.Converter
 open Daisy.Evaluator
 open Daisy.Reader
+module StringMap = Map.Make(String)
 
 let root = ref ""
 
@@ -14,15 +15,15 @@ let ends_with str value =
   String.sub str ((String.length str)-length) length = value
 let is_markdown file = ends_with file ".md"
 
-let get_page_variables markdown = 
+let get_page_variables markdown section_metadata = 
   let lst = [IntExpression 1; IntExpression 2; IntExpression 3; IntExpression 4] in 
-  let items = [("content", StringExpression (markdown_to_html_string markdown)); ("items", ListExpression lst)] in 
+  let items = [("content", StringExpression (markdown_to_html_string markdown)); ("items", ListExpression lst); ("sectionMetadata", section_metadata)] in 
     List.fold_left (fun m (key, value) -> StringMap.add key value m) StringMap.empty items
 let get_site_variables root = 
   let items = [("root", StringExpression root); ("prod", BoolExpression !prod)] in 
     List.fold_left (fun m (key, value) -> StringMap.add key value m) StringMap.empty items
-let create_content_page_from_markdown markdown = 
-  let page_variables = get_page_variables markdown in 
+let create_content_page_from_markdown markdown section_metadata = 
+  let page_variables = get_page_variables markdown section_metadata in 
     create_content_page page_variables (get_site_variables !root) (StringMap.empty)
 
 let get_section_path md_file_path =
@@ -105,11 +106,11 @@ let write_to_html_file html_str section_path filename  =
   close_out oc
 
 
-let generate_from_markdown md_file_name md_file_path layouts_dir = 
+let generate_from_markdown md_file_name md_file_path layouts_dir section_metadata = 
   match (parse_markdown md_file_path) with 
     Some md_page -> 
       let section_path = get_section_path md_file_path in 
-        let content_page = create_content_page_from_markdown md_page in
+        let content_page = create_content_page_from_markdown md_page section_metadata in 
           let html_page = get_corresponding_html md_file_name section_path layouts_dir in 
             (match html_page with 
               Some template_page -> 
@@ -118,7 +119,33 @@ let generate_from_markdown md_file_name md_file_path layouts_dir =
                   Printf.printf "Succesfully generated file: %s" (remove_file_extension md_file_name  ^ ".html\n")
               | None -> Printf.printf "found no matching html files ")
     | None -> ()
+
+(* 
+Function will return an ExpressionList of ExpressionDictionaries. 
+{"title":"Dapr ...",
+""`}
+*)
+let get_section_metadata path files =
+  let convert_metadata_to_dict items = 
+    let dict = StringMap.empty in 
+    DictExpression (List.fold_left (fun d (key, value) -> StringMap.add key (StringExpression value) d) dict items) 
+  in
+  let rec _get_metadata files output = 
+      match files with 
+        [] -> ListExpression (List.rev output)
+        | (x::xs) -> 
+          let file_path = Printf.sprintf "%s/%s" path x in 
+          if is_directory file_path then (_get_metadata xs output) else 
+          (match (parse_metadata file_path) with 
+            Some value -> 
+              _get_metadata xs (List.cons (convert_metadata_to_dict value) output)
+            | None -> _get_metadata xs output)
+  in
+    _get_metadata files [] 
+
 let rec generate_from_dir content_dir layouts_dir = 
+  let content_files = Array.to_list (readdir content_dir) in 
+  let section_metadata = get_section_metadata content_dir content_files in 
   let rec process_content_files content_files = 
     match content_files with 
       [] -> ()
@@ -128,9 +155,8 @@ let rec generate_from_dir content_dir layouts_dir =
           let () = generate_from_dir file_name layouts_dir in process_content_files xs 
         else
           if is_markdown file_name then 
-            let _ = generate_from_markdown x file_name layouts_dir in process_content_files xs in 
-  let content_files = readdir content_dir in 
-  process_content_files (Array.to_list content_files)  
+            let _ = generate_from_markdown x file_name layouts_dir section_metadata in process_content_files xs in 
+  process_content_files  content_files 
 let build_site () = 
   let content_dir = (Printf.sprintf "%s/content" !root) in 
   let layouts_dir = (Printf.sprintf "%s/layouts" !root) in 

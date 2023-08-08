@@ -135,6 +135,7 @@ let get_section_metadata path files =
         [] -> ListExpression (List.rev output)
         | (x::xs) -> 
           let file_path = Printf.sprintf "%s/%s" path x in 
+          if is_directory file_path then (_get_metadata xs output) else 
           (match (parse_metadata file_path) with 
             Some value -> 
               _get_metadata xs (List.cons (convert_metadata_to_dict value) output)
