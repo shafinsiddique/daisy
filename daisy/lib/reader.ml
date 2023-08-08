@@ -27,6 +27,19 @@ let parse_html path =
             ParsingSuccess (value, _) -> Some (TemplatePage value)
             | ParsingError _ -> None)
         | None -> None 
+
+let parse_metadata path = 
+  let file = 
+    try Some (open_in path) with 
+      _ -> None in 
+    match file with 
+      Some ic -> 
+        let file_str = really_input_string ic (in_channel_length ic) in 
+          (match (run_parser html_metadata_parser file_str) with 
+            ParsingSuccess (value, _) -> Some value
+            | ParsingError _ -> None)
+        | None -> None 
+
 (* 
 let get_page_variables markdown = 
   let items = [("content", StringExpression (markdown_to_html_string markdown))] in 

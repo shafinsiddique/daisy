@@ -1,6 +1,9 @@
+
+module StringMap = Map.Make(String)
+
 type expression = 
   StringExpression of string | IntExpression of int | BoolExpression of bool  | ErrorExpression of string
-  | EmptyExpression | ListExpression of (expression list)
+  | EmptyExpression | ListExpression of (expression list) | DictExpression of (expression StringMap.t)
 
 let rec string_of_expression expr = match expr with 
   StringExpression str -> str
@@ -8,6 +11,8 @@ let rec string_of_expression expr = match expr with
   | BoolExpression value -> string_of_bool value
   | ErrorExpression value -> Printf.sprintf "Error: %s" value 
   | EmptyExpression -> ""
-  | ListExpression exprs -> List.fold_left (fun str item -> str ^ item) "" (List.map string_of_expression exprs) 
+  | ListExpression exprs -> List.fold_left (fun str item -> str ^ item) "" (List.map string_of_expression 
+  exprs)
+  | DictExpression _ -> ""
 
 let strings_of_expressions exprs = List.fold_left (fun str item -> str ^ item ^ "\n") "" (List.map string_of_expression exprs)
