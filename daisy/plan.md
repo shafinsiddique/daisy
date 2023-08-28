@@ -135,6 +135,10 @@ date: idk
 Local Variable :
 
     name := expression
+
+Indexing :
+
+    site/page/local_var
 Next Steps: 
 
 - Ternary operator : Will help us fix the relative linking issue. 
@@ -143,7 +147,9 @@ Next Steps:
 - copy directories - Done. 
 - Local Variables - Done
 - loop - Done
-- metadata 
+- metadata - Done
+- Indexing Dictionary Items
+- Sorting by Date. 
 - lists in markdown. 
 
 

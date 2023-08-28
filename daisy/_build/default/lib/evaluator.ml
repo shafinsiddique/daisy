@@ -67,6 +67,23 @@ and evaluate_node node content_page =
     | VariableDefinition (name, expression) -> evaluate_variable_def name expression content_page
     | ForLoop (name, condition, body) -> evaluate_for name condition body content_page
     | Metadata _ -> EmptyExpression
+    | DictionaryIndex (template, index_list) -> evaluate_dict_index template content_page index_list 
+
+and evaluate_dict_index template content_page index_list =
+  let rec _evaluate_dict_index expr index_list = 
+    match index_list with 
+      [] -> expr
+      | (x::xs) -> match expr with 
+        DictExpression items -> 
+          let find_res = StringMap.find_opt x items in 
+            (match find_res with 
+              Some expr -> _evaluate_dict_index expr xs 
+              | None -> ErrorExpression "Unable to index expression")
+         | _ -> ErrorExpression "Unable to index expression"
+  in 
+  let expr = evaluate_node template content_page in 
+  _evaluate_dict_index expr index_list
+          
 
 and evaluate_concat strs content_page = 
   let exprs = deconstruct_list_expression (evaluate_items strs content_page []) in 

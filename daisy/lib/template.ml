@@ -9,6 +9,7 @@ type template = TrueExpr | FalseExpr | StringExpr of string | IntExpr of int
   | LocalVariable of string 
   | ForLoop of (string * template * template list)
   | Metadata of ((string * string) list)
+  | DictionaryIndex of (template * string list)
 
 type template_page = TemplatePage of (template list)
 
@@ -52,9 +53,17 @@ let site_variable_parser = pure (fun _ name ->  SiteVariable name)  <*> word_par
 
 let page_variable_parser = pure (fun _ name -> PageVariable name) <*> word_parser ".Page." <*> _local_variable_name_parser
 
+let char_list_to_string lst = List.fold_left (fun str item -> str ^ chr_to_string item) "" lst
+let chain_of_indexing_parser = 
+  pure (fun _ str _ -> str) <*> char_parser '[' <*> strings_parser <*> char_parser ']'
+
+let handle_template_parsing _ template indexing _ = match indexing with 
+  [] -> template
+  | lst -> DictionaryIndex (template, lst)
+
 let rec template_expression_parser () = 
   (* let with_brackets p =  in  *)
-    pure (fun _ n _ -> n) <*> space_and_newline_parser <*> any_of [lazy_parser template_with_brackets; boolean_parser; lazy_parser ternary_parser; lazy_parser variable_def_parser; template_strings_parser; lazy_parser concat_parser; integer_parser; local_variable_parser; site_variable_parser; page_variable_parser; ] <*>  space_and_newline_parser
+    pure handle_template_parsing <*> space_and_newline_parser <*> any_of [lazy_parser template_with_brackets; boolean_parser; lazy_parser ternary_parser; lazy_parser variable_def_parser; template_strings_parser; lazy_parser concat_parser; integer_parser; local_variable_parser; site_variable_parser; page_variable_parser;] <*> zero_or_more chain_of_indexing_parser <*> space_and_newline_parser
   
 and template_with_brackets () = (pure (fun _ e _ -> e) <*> char_parser '(' <*> template_expression_parser () <*> char_parser ')')
 
@@ -73,6 +82,7 @@ and ternary_parser () = pure (fun _ condition _ option1 _ option2 ->
 word_parser "->" <*> (lazy_parser template_expression_parser) <*> word_parser ":" <*> (lazy_parser template_expression_parser) 
 
 and variable_def_parser () = pure (fun name _ expr -> VariableDefinition (name, expr)) <*> _local_variable_name_parser <*> word_parser_with_space ":=" <*> lazy_parser template_expression_parser
+
 let template_char_parser = pure (fun c spaces -> TemplateString ((String.make 1 c) ^ List.fold_left (fun str c -> str ^ (chr_to_string c)) "" spaces)) <*> any_parser <*> space_and_newline_parser
 
 let get_header_parser name = pure (fun _ _ _ str _ _ -> str) <*> word_parser_with_space "((" <*> space_and_newline_parser <*> single_word_parser_with_space name <*> strings_parser  <*> space_and_newline_parser <*> word_parser_with_space "))"
