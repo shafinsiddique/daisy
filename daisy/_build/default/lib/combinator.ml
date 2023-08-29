@@ -195,3 +195,11 @@ let ends_with_newline_parser = pure (fun _ _ _ -> "")
   <*> space_parser 
   <*> char_parser '\n' 
   <*> space_and_newline_parser  
+
+let chars_to_string chars = List.fold_left (fun str chr -> str ^ (String.make 1 chr)) "" chars
+
+let positive_integer_parser = pure (fun nums -> int_of_string (chars_to_string nums)) <*> one_or_more digit_parser
+
+let negative_integer_parser = pure (fun _ num -> 0 -num) <*> char_parser '-' <*> positive_integer_parser
+
+let integer_parser = any_of [negative_integer_parser; positive_integer_parser]

@@ -35,7 +35,7 @@ let parse_metadata path =
     match file with 
       Some ic -> 
         let file_str = really_input_string ic (in_channel_length ic) in 
-          (match (run_parser html_metadata_parser file_str) with 
+          (match (run_parser metadata_parser file_str) with 
             ParsingSuccess (value, _) -> Some value
             | ParsingError _ -> None)
         | None -> None 

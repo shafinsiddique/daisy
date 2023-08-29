@@ -8,7 +8,6 @@ type template = TrueExpr | FalseExpr | StringExpr of string | IntExpr of int
   | VariableDefinition of (string * template)
   | LocalVariable of string 
   | ForLoop of (string * template * template list)
-  | Metadata of ((string * string) list)
   | DictionaryIndex of (template * string list)
 
 type template_page = TemplatePage of (template list)
@@ -111,18 +110,7 @@ let collapse_char str output =
       TemplateString existing -> List.cons (TemplateString (existing ^ str)) xs 
       | _ -> List.cons (TemplateString str) output
 
-let metadata_heading_parser = pure (fun _ _ -> "") <*> word_parser "---" <*> ends_with_newline_parser
 
-let metadata_item_parser = pure (fun key _ _ value _ -> (key, value)) <*> strings_parser <*> space_parser <*> word_parser ":" <*> strings_parser <*> ends_with_newline_parser
-
-let metadata_ending_parser = pure (fun _ _ -> "") <*> word_parser "---" <*> ends_with_newline_parser
-
-let _metadata_parser = pure (fun _ items _ -> items) 
-  <*> metadata_heading_parser 
-  <*> one_or_more metadata_item_parser 
-  <*> metadata_ending_parser
-
-let metadata_parser = pure (fun items -> Metadata items) <*> _metadata_parser
 
 let rec collapse lst output =
   match lst with 
@@ -152,8 +140,7 @@ and section_definition_parser () =
 
 let html_parser = 
   Parser 
-  (fun input -> match (run_parser (zero_or_more (any_of[lazy_parser template_parser; metadata_parser; template_char_parser]) ) input) with 
+  (fun input -> match (run_parser (zero_or_more (any_of[lazy_parser template_parser; template_char_parser]) ) input) with 
     ParsingSuccess (value, rest) -> ParsingSuccess (collapse value [], rest)
     | ParsingError e -> ParsingError e)
 
-let html_metadata_parser = pure (fun _ items -> items) <*> space_and_newline_parser <*> _metadata_parser

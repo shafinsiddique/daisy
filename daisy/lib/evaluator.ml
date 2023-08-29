@@ -66,7 +66,6 @@ and evaluate_node node content_page =
     | LocalVariable name -> (get_variable info.local_variables name)
     | VariableDefinition (name, expression) -> evaluate_variable_def name expression content_page
     | ForLoop (name, condition, body) -> evaluate_for name condition body content_page
-    | Metadata _ -> EmptyExpression
     | DictionaryIndex (template, index_list) -> evaluate_dict_index template content_page index_list 
 
 and evaluate_dict_index template content_page index_list =

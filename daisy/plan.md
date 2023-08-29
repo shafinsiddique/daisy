@@ -122,6 +122,10 @@ If if it is regular index.md file then
         if not 
         default.html in default directory 
 
+Lists iN Markdown:
+
+- Hello World
+- 
 Loop Syntax
 
 (( for var in expression ))
@@ -148,7 +152,7 @@ Next Steps:
 - Local Variables - Done
 - loop - Done
 - metadata - Done
-- Indexing Dictionary Items
+- Indexing Dictionary Items - Done
 - Sorting by Date. 
 - lists in markdown. 
 

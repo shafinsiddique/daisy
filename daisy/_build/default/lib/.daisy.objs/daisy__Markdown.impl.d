@@ -1,1 +1,1 @@
-lib/markdown.ml: Combinator List String
+lib/markdown.ml: Char Combinator List String
