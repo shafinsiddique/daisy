@@ -1,0 +1,29 @@
+<html>
+    (( usepartial (concat (.Site.root) "/layouts/partials/head.html") ))
+
+<body>
+
+    (( usepartial (concat (.Site.root) "/layouts/partials/header.html") ))
+
+    <main id="content">
+        <h3>Posts</h3>
+        <ul id="posts">
+    
+            (( for metadata in .Page.sectionMetadata ))
+            <li>
+                (( postUrl := concat (.Site.baseUrl) (metadata["url"])))
+                <a href="(( postUrl ))">
+                    (( metadata["title"] ))
+                    <small><time> (( metadata["date"] ))</time></small>
+                </a>
+                 
+            </li>
+    
+            (( endfor ))
+         
+        </ul>
+    </main>
+  
+
+</body>
+</html>

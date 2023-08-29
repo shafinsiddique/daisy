@@ -8,6 +8,7 @@ type markdown = Heading of {level: int; components: markdown list} | MarkdownCha
   | UnorderedList of (markdown list) list
   | Metadata of (string * string) list
   | OrderedList of {numbering_type: list_type; start: int; items: (markdown list) list}
+  | CodeSection of (markdown list)
 
 type markdown_page = MarkdownPage of (markdown list)
 
@@ -114,12 +115,28 @@ let md_metadata_parser = pure (fun item -> Metadata item) <*> metadata_parser
 let paragraph_parser = pure (fun items -> collapse_chars(Paragraph items)) 
   <*> one_or_more (internal_parser ())
 
+let code_heading_parser = pure (fun _ _ -> "") <*> word_parser "--code" <*> space_and_newline_parser
+
+let code_ending_parser = word_parser "--endcode"
+
+let internal_with_space = pure (fun item spaces -> (item, spaces) ) <*> internal_parser() <*> (zero_or_more (any_of [char_parser ' '; char_parser '\n'])) 
+
+let add_spaces spaces output = 
+  List.fold_left (fun output space -> List.cons (MarkdownChar space) output) output spaces
+let join_items items = 
+  List.fold_left (fun output (md, space) -> add_spaces space (List.cons md output)) [] items
+
+let code_body_parser = pure (fun items _ -> List.rev (join_items items)) <*> parse_on_condition code_ending_parser internal_with_space  <*> code_ending_parser 
+
+let code_section_parser  = pure (fun _ body -> CodeSection (collapse body [])) 
+<*> code_heading_parser <*> code_body_parser
 (*
+
 
 Only time markdown parser would fail is if string is empty. 
 *)
 let markdown_parser =  
-  one_or_more (pure (fun _ p  _-> p ) <*> space_and_newline_parser <*> any_of [heading_parser; md_metadata_parser; unordered_list_parser; ordered_list_parser; paragraph_parser] <*> space_and_newline_parser ) 
+  one_or_more (pure (fun _ p  _-> p ) <*> space_and_newline_parser <*> any_of [heading_parser; md_metadata_parser; unordered_list_parser; ordered_list_parser; code_section_parser; paragraph_parser] <*> space_and_newline_parser ) 
 (*
 What's left? List, Paragraph (Outer level), continous parsing.   
 

@@ -30,7 +30,11 @@ markdown_to_html md =
       | UnorderedList items -> unordered_list_to_string items
       | Metadata _ -> ""
       | OrderedList {numbering_type;start;items;} -> ordered_list_to_string numbering_type start items
+      | CodeSection items -> code_section_to_string items
 
+and code_section_to_string items = 
+  Printf.sprintf "<pre><code> \n %s \n </code></pre>" (markdown_to_html_string (MarkdownPage items))
+  
 and unordered_list_to_string items = 
   let items_str = List.fold_left (^) "" (List.map (fun item -> Printf.sprintf "<li>%s</li>\n" (markdown_to_html_string (MarkdownPage item))) items) in 
   Printf.sprintf "<ul>%s</ul>" items_str
@@ -48,5 +52,5 @@ Printf.sprintf "%s\n%s\n%s" opening (markdown_to_html_string (MarkdownPage compo
 and 
 markdown_to_html_string page = 
   let (MarkdownPage items) = page in 
-    List.fold_left (fun str item -> Printf.sprintf "%s%s\n" str item) "" (List.map markdown_to_html items)
+    List.fold_left (fun str item -> Printf.sprintf "%s%s" str item) "" (List.map markdown_to_html items)
 

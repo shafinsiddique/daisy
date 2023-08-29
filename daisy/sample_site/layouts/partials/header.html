@@ -1,15 +1,19 @@
 <header id="banner">
-    <h2><a href="">shafin siddique</a></h2>
+    
+    <h2><a href="(( .Site.baseUrl ))">shafin siddique</a></h2>
     <nav>
         <ul>
             <li>
-                <a href="/" title="Posts">about</a>
+                <a href="(( .Site.baseUrl ))" title="about">about</a>
             </li>
             <li>
-                <a href="./posts/index.html" title="projects">posts</a>
+                (( postsUrl := (concat (.Site.baseUrl) "/posts")))
+                <a href="(( postsUrl ))" title="posts">posts</a>
             </li>
             <li>
-                <a href="./posts/index.html" title="projects">projects</a>
+                (( projectsUrl := (concat (.Site.baseUrl) "/projects")))
+
+                <a href="(( projectsUrl ))" title="projects">projects</a>
             </li>
         </ul>
     </nav>

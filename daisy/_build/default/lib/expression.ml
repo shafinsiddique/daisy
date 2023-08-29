@@ -15,4 +15,4 @@ let rec string_of_expression expr = match expr with
   exprs)
   | DictExpression items -> StringMap.fold (fun key value accum -> accum ^ (Printf.sprintf "(%s, %s)\n" key (string_of_expression value)) ) items ""
 
-let strings_of_expressions exprs = List.fold_left (fun str item -> str ^ item ^ "\n") "" (List.map string_of_expression exprs)
+let strings_of_expressions exprs = List.fold_left (fun str item -> str ^ item ^ "") "" (List.map string_of_expression exprs)

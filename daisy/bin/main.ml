@@ -10,20 +10,30 @@ let root = ref ""
 
 let prod = ref false
 
+let site_metadata = ref []
 let ends_with str value = 
   let length = String.length value in 
   String.sub str ((String.length str)-length) length = value
 let is_markdown file = ends_with file ".md"
 
-let get_page_variables markdown section_metadata = 
-  let lst = [IntExpression 1; IntExpression 2; IntExpression 3; IntExpression 4] in 
-  let items = [("content", StringExpression (markdown_to_html_string markdown)); ("items", ListExpression lst); ("sectionMetadata", section_metadata)] in 
-    List.fold_left (fun m (key, value) -> StringMap.add key value m) StringMap.empty items
+let convert_metadata_to_dict items = 
+  let dict = StringMap.empty in 
+  DictExpression (List.fold_left (fun d (key, value) -> StringMap.add key (StringExpression value) d) dict items) 
+
+let add_metadata path items = 
+  match (parse_metadata path) with 
+    Some value -> List.cons (("metadata", convert_metadata_to_dict value)) items 
+    | None -> items 
+let get_page_variables path markdown section_metadata = 
+
+  let items = [("content", StringExpression (markdown_to_html_string markdown)); ("sectionMetadata", section_metadata)] in 
+  let items = add_metadata path items in 
+    List.fold_left (fun m (key, value) -> StringMap.add key value m) StringMap.empty items 
 let get_site_variables root = 
   let items = [("root", StringExpression root); ("prod", BoolExpression !prod)] in 
-    List.fold_left (fun m (key, value) -> StringMap.add key value m) StringMap.empty items
-let create_content_page_from_markdown markdown section_metadata = 
-  let page_variables = get_page_variables markdown section_metadata in 
+    List.fold_left (fun m (key, value) -> StringMap.add key value m) StringMap.empty  (List.append items !site_metadata)
+let create_content_page_from_markdown path markdown section_metadata = 
+  let page_variables = get_page_variables path markdown section_metadata in 
     create_content_page page_variables (get_site_variables !root) (StringMap.empty)
 
 let get_section_path md_file_path =
@@ -51,7 +61,9 @@ let get_lookup_list md_filename section_path layouts_dir =
   let base_path = Printf.sprintf "%s/%s" layouts_dir in
   let filename_without_ext = remove_file_extension md_filename in 
   if is_home section_path md_filename 
-    then [base_path "index.html"; base_path "list.html"; base_path "defaults/index.html"; base_path "defaults/list.html"] 
+    then 
+
+      [base_path "index.html"; base_path "list.html"; base_path "defaults/index.html"; base_path "defaults/list.html"] 
   else 
     let child_path = (Printf.sprintf "%s/%s/%s" layouts_dir section_path) in 
     if is_section_home md_filename 
@@ -110,7 +122,7 @@ let generate_from_markdown md_file_name md_file_path layouts_dir section_metadat
   match (parse_markdown md_file_path) with 
     Some md_page -> 
       let section_path = get_section_path md_file_path in 
-        let content_page = create_content_page_from_markdown md_page section_metadata in 
+        let content_page = create_content_page_from_markdown md_file_path md_page section_metadata in 
           let html_page = get_corresponding_html md_file_name section_path layouts_dir in 
             (match html_page with 
               Some template_page -> 
@@ -126,10 +138,8 @@ Function will return an ExpressionList of ExpressionDictionaries.
 ""`}
 *)
 let get_section_metadata path files =
-  let convert_metadata_to_dict items = 
-    let dict = StringMap.empty in 
-    DictExpression (List.fold_left (fun d (key, value) -> StringMap.add key (StringExpression value) d) dict items) 
-  in
+  let get_url filepath filename   =  Printf.sprintf "/%s/%s.html" (get_section_path filepath) (remove_file_extension filename)  in 
+ 
   let rec _get_metadata files output = 
       match files with 
         [] -> ListExpression (List.rev output)
@@ -138,7 +148,8 @@ let get_section_metadata path files =
           if is_directory file_path then (_get_metadata xs output) else 
           (match (parse_metadata file_path) with 
             Some value -> 
-              _get_metadata xs (List.cons (convert_metadata_to_dict value) output)
+              _get_metadata xs (List.cons (convert_metadata_to_dict 
+                (List.cons (("url", (get_url file_path x))) value)) output)
             | None -> _get_metadata xs output)
   in
     _get_metadata files [] 
@@ -155,13 +166,26 @@ let rec generate_from_dir content_dir layouts_dir =
           let () = generate_from_dir file_name layouts_dir in process_content_files xs 
         else
           if is_markdown file_name then 
-            let _ = generate_from_markdown x file_name layouts_dir section_metadata in process_content_files xs in 
-  process_content_files  content_files 
+            let _ = generate_from_markdown x file_name layouts_dir section_metadata in process_content_files xs  
+          else 
+            process_content_files xs in 
+  process_content_files content_files 
+
+  
+let set_site_metadata content_dir = 
+  let metadata_file = Printf.sprintf "%s/%s" content_dir "metadata.daisy" in 
+  if file_exists metadata_file then 
+      match parse_metadata metadata_file with 
+        Some value -> 
+          site_metadata := List.map (fun (k, v) -> (k, StringExpression v)) value
+        | None -> ()
+  else ()
 let build_site () = 
   let content_dir = (Printf.sprintf "%s/content" !root) in 
   let layouts_dir = (Printf.sprintf "%s/layouts" !root) in 
   if file_exists content_dir then 
     (if file_exists layouts_dir then (
+      let () = set_site_metadata content_dir in
       generate_from_dir content_dir layouts_dir) else (Printf.printf "No layout directory"))
     else (Printf.printf "No content directory")
   
