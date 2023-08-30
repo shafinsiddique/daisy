@@ -1,5 +1,8 @@
 
-# Welcome to Daisy
+
+<img width="64" height="64" src="https://img.icons8.com/cotton/64/hearts--v7.png" alt="hearts--v7"/> 
+
+# Welcome to Daisy 
 
 [Daisy](https://github.com/shafinsiddique/daisy) is a static site generator that I built for my own needs. It is ridiculously simple and minimal. You can find more details about Daisy on it's [documentation site](https://shafinsiddique.github.io/daisy-docs/). Fun fact : The documentation site was actually generated using Daisy. So was my own [personal website.](https://shafin.me).
 
