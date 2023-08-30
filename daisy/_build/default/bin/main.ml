@@ -190,5 +190,10 @@ let build_site () =
     else (Printf.printf "No content directory")
   
 let () =
-  let () = root := "./sample_site" in 
+  let args = [
+    ("--root", Arg.Set_string root, "The directory from which the site is generated");
+    ("--prod", Arg.Set prod, "Generate site in production mode")
+  ] in
+  let () = Arg.parse args (fun _ -> ()) "" in 
+  (* let () = root := "./sample_site" in  *)
   build_site ()

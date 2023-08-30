@@ -1,0 +1,14 @@
+<html>
+    (( usepartial (concat (.Site.root) "/layouts/partials/head.html") ))
+<body>
+
+    (( usepartial (concat (.Site.root) "/layouts/partials/header.html") ))
+
+    <main id="content">
+        (( .Page.content ))
+    </main>
+
+    (( usepartial (concat (.Site.root) "/layouts/partials/footer.html") ))
+
+</body>
+</html>
